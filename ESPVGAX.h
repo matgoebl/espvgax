@@ -31,6 +31,14 @@ hardware wiring and library usage.
 #define ESPVGAX_HSYNC_PIN D2 
 #define ESPVGAX_VSYNC_PIN D1 
 #define ESPVGAX_COLOR_PIN D7 //cannot be changed. D7=GPIO13, used by HSPI
+
+#define ESPVGAX_READ_INPUTS
+#define WHEEL_ONE_PIN A0 //analog
+#define WHEEL_TWO_PIN A0 //analog
+#define BUTTON_1_PIN D3 //digital
+#define BUTTON_2_PIN D4  //digital - do not use ESPVGAX_EXTRA_COLORS at the same time!
+#define BUTTON_3_PIN D0 //digital
+
 /* 
  * A NICE TRICK: connect a wire to D5 if you want a background color: this PIN 
  * is HIGH when PIXELDATA is sent to VGA. You can choose one of the two VGA RGB 
@@ -516,6 +524,13 @@ public:
    */
   static inline void tone(uint8_t t) {}
   static inline void noTone() {}
+#ifdef ESPVGAX_READ_INPUTS
+  static boolean buttonOneStatus; 
+  static boolean buttonTwoStatus; 
+  static boolean buttonThreeStatus;
+  static byte wheelOnePosition; 
+  static byte wheelTwoPosition;
+#endif
 };
 #ifndef SWAP_UINT16
 #define SWAP_UINT16(x) (((x)>>8) | ((x)<<8))

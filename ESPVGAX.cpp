@@ -14,6 +14,14 @@ volatile uint8_t props[525];
 
 volatile uint8_t *ESPVGAX::fbb=(volatile uint8_t*)&ESPVGAX::fbw[0];
 
+#ifdef ESPVGAX_READ_INPUTS
+boolean ESPVGAX::buttonOneStatus; 
+boolean ESPVGAX::buttonTwoStatus; 
+boolean ESPVGAX::buttonThreeStatus;
+byte ESPVGAX::wheelOnePosition; 
+byte ESPVGAX::wheelTwoPosition;
+#endif
+
 #include "espvgax_hspi.h"
 
 // wait a fixed numbers of CPU cycles
@@ -33,6 +41,11 @@ static inline uint32_t getTicks() {
   return ccount;
 }
 #define TICKS (getTicks())
+
+#ifdef ESPVGAX_READ_INPUTS
+static byte newWheelOnePosition=0;
+static byte newWheelTwoPosition=0;
+#endif
 
 void ICACHE_RAM_ATTR vga_handler() {
   noInterrupts();
@@ -88,6 +101,38 @@ void ICACHE_RAM_ATTR vga_handler() {
     // next line will end negative VSYNC
     vsync=0x304; 
     break;
+#ifdef ESPVGAX_READ_INPUTS
+  // Read multiplexed button and wheel inputs,
+  // spreaded over multiple scan lines to reduce flickering
+  case 500:
+    newWheelOnePosition=0;
+    newWheelTwoPosition=0;
+    pinMode(BUTTON_1_PIN,OUTPUT);
+    pinMode(BUTTON_2_PIN,OUTPUT);
+    digitalWrite(BUTTON_1_PIN,HIGH);
+    digitalWrite(BUTTON_2_PIN,LOW);
+    break;
+  case 502:
+    newWheelOnePosition = 127 - byte(analogRead(WHEEL_ONE_PIN)/8); //to change direction of the wheel remove "127 -" ---------------------
+    break;
+  case 510:
+    digitalWrite(BUTTON_1_PIN,LOW);
+    digitalWrite(BUTTON_2_PIN,HIGH);
+    break;
+  case 512:
+    newWheelTwoPosition = 127 - byte(analogRead(WHEEL_TWO_PIN)/8); 
+    break;
+  case 520:
+    pinMode(BUTTON_1_PIN,INPUT_PULLUP);
+    pinMode(BUTTON_2_PIN,INPUT_PULLUP);
+    pinMode(BUTTON_3_PIN,INPUT);
+    ESPVGAX::buttonOneStatus = 1-digitalRead(BUTTON_1_PIN);
+    ESPVGAX::buttonTwoStatus = 1-digitalRead(BUTTON_2_PIN);
+    ESPVGAX::buttonThreeStatus = 1-digitalRead(BUTTON_3_PIN);
+    if(ESPVGAX::buttonOneStatus == 0) ESPVGAX::wheelOnePosition=newWheelOnePosition;
+    if(ESPVGAX::buttonTwoStatus == 0) ESPVGAX::wheelTwoPosition=newWheelTwoPosition;
+    break;
+#endif
   }
   // fetch the next line, or empty line in case of VGA lines [480..524]
   line=(fby<ESPVGAX_HEIGHT) ? ESPVGAX::fbw[fby] : empty;
