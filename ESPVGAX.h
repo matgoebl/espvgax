@@ -38,6 +38,7 @@ hardware wiring and library usage.
 #define BUTTON_1_PIN D3 //digital
 #define BUTTON_2_PIN D4  //digital - do not use ESPVGAX_EXTRA_COLORS at the same time!
 #define BUTTON_3_PIN D0 //digital
+#define WHEEL_ADJUST 105/100 // adjust wheel value by +5% to reach end position
 
 /* 
  * A NICE TRICK: connect a wire to D5 if you want a background color: this PIN 

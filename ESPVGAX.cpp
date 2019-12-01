@@ -20,6 +20,8 @@ boolean ESPVGAX::buttonTwoStatus;
 boolean ESPVGAX::buttonThreeStatus;
 byte ESPVGAX::wheelOnePosition; 
 byte ESPVGAX::wheelTwoPosition;
+static byte newWheelOnePosition=0;
+static byte newWheelTwoPosition=0;
 #endif
 
 #include "espvgax_hspi.h"
@@ -41,11 +43,6 @@ static inline uint32_t getTicks() {
   return ccount;
 }
 #define TICKS (getTicks())
-
-#ifdef ESPVGAX_READ_INPUTS
-static byte newWheelOnePosition=0;
-static byte newWheelTwoPosition=0;
-#endif
 
 void ICACHE_RAM_ATTR vga_handler() {
   noInterrupts();
@@ -113,14 +110,18 @@ void ICACHE_RAM_ATTR vga_handler() {
     digitalWrite(BUTTON_2_PIN,LOW);
     break;
   case 502:
-    newWheelOnePosition = 127 - byte(analogRead(WHEEL_ONE_PIN)/8); //to change direction of the wheel remove "127 -" ---------------------
+    newWheelOnePosition=(analogRead(WHEEL_ONE_PIN)*WHEEL_ADJUST)/8;
+    if(newWheelOnePosition>127) newWheelOnePosition=127;
+    newWheelOnePosition = 127 - byte(newWheelOnePosition); //to change direction of the wheel remove "127 -" ---------------------
     break;
   case 510:
     digitalWrite(BUTTON_1_PIN,LOW);
     digitalWrite(BUTTON_2_PIN,HIGH);
     break;
   case 512:
-    newWheelTwoPosition = 127 - byte(analogRead(WHEEL_TWO_PIN)/8); 
+    newWheelTwoPosition=(analogRead(WHEEL_ONE_PIN)*WHEEL_ADJUST)/8;
+    if(newWheelTwoPosition>127) newWheelTwoPosition=127;
+    newWheelTwoPosition = 127 - byte(newWheelTwoPosition); //to change direction of the wheel remove "127 -" ---------------------
     break;
   case 520:
     pinMode(BUTTON_1_PIN,INPUT_PULLUP);
